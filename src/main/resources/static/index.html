@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraceBack | Lost & Found</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="logo">Trace<span>Back.</span></div>
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#report">Report Item</a>
+        <a href="#items">Browse Items</a>
+        <a href="/admin.html">Admin</a>
+    </nav>
+</header>
+
+<section class="hero" id="home">
+    <div class="hero-content">
+        <p class="tagline">LOST SOMETHING? FOUND SOMETHING?</p>
+        <h1>Every Lost Item<br>Deserves a <span>Way Back.</span></h1>
+        <p class="hero-text">
+            Helping people reconnect with their lost belongings
+            through a smarter lost and found platform.
+        </p>
+        <a href="#report" class="primary-btn">Report an Item</a>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stat-card">
+        <h2 id="totalCount">0</h2>
+        <p>Total Reports</p>
+    </div>
+    <div class="stat-card">
+        <h2 id="lostCount">0</h2>
+        <p>Lost Items</p>
+    </div>
+    <div class="stat-card">
+        <h2 id="foundCount">0</h2>
+        <p>Found Items</p>
+    </div>
+</section>
+
+<section class="report-section" id="report">
+    <div class="section-heading">
+        <p class="tagline">HELP SOMEONE FIND THEIR BELONGINGS</p>
+        <h2>Report an Item</h2>
+        <p>Share the details so we can help reconnect items with their owners.</p>
+    </div>
+
+    <form id="reportForm">
+        <div class="form-group">
+            <label>Report Type</label>
+            <select id="reportType" required>
+                <option value="">Select report type</option>
+                <option value="LOST">I Lost Something</option>
+                <option value="FOUND">I Found Something</option>
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="title"
+                       placeholder="e.g. Black Wallet" required>
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+                <select id="category" required>
+                    <option value="">Select category</option>
+                    <option>Electronics</option>
+                    <option>Wallet</option>
+                    <option>Books</option>
+                    <option>Accessories</option>
+                    <option>Documents</option>
+                    <option>Bags</option>
+                    <option>Other</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Color</label>
+                <input type="text" id="color" placeholder="e.g. Black">
+            </div>
+
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="location"
+                       placeholder="e.g. College Library" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="description" rows="4"
+                placeholder="Describe the item and any identifying features..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Date Lost / Found</label>
+            <input type="date" id="eventDate">
+        </div>
+
+        <h3 class="form-subheading">Your Contact Details</h3>
+        <p class="form-hint">
+            Kept private: other visitors only see a partly hidden version
+            (e.g. r***@gmail.com). The TraceBack admin uses them to connect you.
+        </p>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="reporterName">Your Name</label>
+                <input type="text" id="reporterName"
+                       placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reporterEmail">Email Address</label>
+                <input type="email" id="reporterEmail"
+                       placeholder="Enter your email" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="reporterPhone">Phone Number</label>
+            <input type="tel" id="reporterPhone"
+                   placeholder="10-digit phone number"
+                   pattern="[0-9]{10}"
+                   title="Enter a 10-digit phone number"
+                   required>
+        </div>
+
+        <button type="submit" class="primary-btn submit-btn">
+            Submit Report
+        </button>
+
+        <p id="message" role="status" aria-live="polite"></p>
+    </form>
+</section>
+
+<section class="items-section" id="items">
+    <div class="section-heading">
+        <p class="tagline">COMMUNITY LOST & FOUND</p>
+        <h2>Recent Reports</h2>
+        <p>Browse the items reported by the community.</p>
+    </div>
+
+    <div class="filters">
+        <input type="text" id="searchInput"
+               placeholder="Search by name, location or description...">
+
+        <select id="filterType">
+            <option value="ALL">All Reports</option>
+            <option value="LOST">Lost Items</option>
+            <option value="FOUND">Found Items</option>
+        </select>
+    </div>
+
+    <div id="itemsContainer" class="items-grid">
+        <p>Loading reports...</p>
+    </div>
+</section>
+
+<footer>
+    <h2>TraceBack.</h2>
+    <p>Connecting lost belongings with their rightful owners.</p>
+    <p>© 2026 TraceBack. All rights reserved.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraceBack - Admin Dashboard</title>
+    <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+
+<header class="admin-header">
+    <h2>TraceBack Admin</h2>
+    <a href="/">Back to Website</a>
+</header>
+
+<main class="admin-container">
+
+    <h1>Admin Dashboard</h1>
+    <div id="adminFlash" class="admin-flash" role="status" aria-live="polite"></div>
+    <p>Manage lost and found reports and review ownership claims.</p>
+
+    <section class="stats">
+        <div class="stat-card">
+            <h2 id="totalCount">0</h2>
+            <p>Total Reports</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="lostCount">0</h2>
+            <p>Lost Items</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="foundCount">0</h2>
+            <p>Found Items</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="returnedCount">0</h2>
+            <p>Returned Items</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="pendingClaimsCount">0</h2>
+            <p>Pending Claims</p>
+        </div>
+    </section>
+
+    <section class="reports-section">
+        <h2>Manage Reports</h2>
+
+        <select id="statusFilter">
+            <option value="ALL">All Reports</option>
+            <option value="LOST">Lost</option>
+            <option value="FOUND">Found</option>
+            <option value="RETURNED">Returned</option>
+            <option value="ACTIVE">Active</option>
+        </select>
+
+        <div id="adminReports">
+            Loading reports...
+        </div>
+    </section>
+
+    <section class="claims-section">
+        <h2>Review Claims</h2>
+        <p class="section-subtitle">
+            Approving a claim marks the item as returned and rejects
+            any other pending claims on it.
+        </p>
+
+        <select id="claimFilter">
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="ALL">All Claims</option>
+        </select>
+
+        <div id="adminClaims">
+            Loading claims...
+        </div>
+    </section>
+
+</main>
+
+<script src="/admin.js"></script>
+</body>
+</html>
