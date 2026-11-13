@@ -36,3 +36,20 @@ build/
 data/
 *.mv.db
 *.trace.db
+*.lock.db
+
+### Secrets and local configuration (never commit) ###
+.env
+*.env
+application-local.properties
+application-*.local.properties
+src/main/resources/application-local.properties
+
+### Database backups and logs ###
+backups/
+logs/
+*.log
+
+### OS files ###
+.DS_Store
+Thumbs.db

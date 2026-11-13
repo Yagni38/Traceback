@@ -10,7 +10,7 @@ class ReportResponseMaskingTests {
 
     @Test
     void masksEmail() {
-        assertEquals("r***@gmail.com", ReportResponse.maskEmail("ravi.kumar@gmail.com"));
+        assertEquals("r***@example.com", ReportResponse.maskEmail("ravi.kumar@example.com"));
         assertEquals("***", ReportResponse.maskEmail("broken-email"));
         assertNull(ReportResponse.maskEmail(null));
     }

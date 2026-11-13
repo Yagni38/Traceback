@@ -1,0 +1,41 @@
+# ------------------------------------------------------------------
+# TraceBack - container image for Vercel
+#
+# Vercel builds this file instead of treating the repository as a static
+# website ("Dockerfile.vercel" takes priority over framework detection).
+# The same file also works with plain Docker:
+#   docker build -f Dockerfile.vercel -t traceback .
+# ------------------------------------------------------------------
+
+# ---------- Stage 1: build the Spring Boot JAR ----------
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /workspace
+
+# Download dependencies first so this layer is cached between builds
+COPY pom.xml .
+RUN mvn -B -q dependency:go-offline
+
+# Build the application (tests run locally / in CI with "mvn test")
+COPY src ./src
+RUN mvn -B -q -DskipTests package \
+ && cp target/traceback-*.jar /workspace/app.jar
+
+# ---------- Stage 2: small runtime image ----------
+FROM eclipse-temurin:17-jre
+
+# Run as a normal user, not root
+RUN groupadd --system traceback && useradd --system --gid traceback traceback
+WORKDIR /app
+COPY --from=build /workspace/app.jar /app/app.jar
+USER traceback
+
+# Production profile = PostgreSQL, no H2 console, admin password required.
+# PORT must match the PORT environment variable set in Vercel project settings.
+ENV SPRING_PROFILES_ACTIVE=prod \
+    PORT=8080 \
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -XX:TieredStopAtLevel=1"
+
+EXPOSE 8080
+
+# Exec form so the JVM receives SIGTERM and shuts down gracefully
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

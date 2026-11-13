@@ -34,7 +34,7 @@ TraceBack solves this by:
   (same category, matching keywords, color, location, date proximity).
 - **Claim a found item** with proof of ownership.
 - **Duplicate claim prevention**: the same email cannot submit two pending claims for one item.
-- Contact details are **masked** for the public (for example `r***@gmail.com`, `******3210`).
+- Contact details are **masked** for the public (for example `r***@example.com`, `******3210`).
 - Loading indicators, success messages, error messages and highlighting of invalid fields.
 
 ### Admin dashboard (`/admin.html`, login required)
@@ -50,7 +50,7 @@ TraceBack solves this by:
 - Admin password comes from an **environment variable**; nothing secret is stored in the code.
 - Server-side **input validation** with clear, field-by-field error messages.
 - Consistent JSON error responses and correct **HTTP status codes** (400, 401, 404, 409, 500).
-- **Persistent file-based H2 database**: data survives restarts.
+- **Persistent database**: file-based H2 locally, **PostgreSQL in production** (configured only through environment variables).
 - **Optimistic locking** (`@Version`) so two admins cannot approve conflicting claims at the same moment.
 - Automated tests for the important API operations.
 
@@ -63,9 +63,10 @@ TraceBack solves this by:
 | Language    | Java 17 |
 | Framework   | Spring Boot 4.1.2 (Spring Web MVC, Spring Data JPA, Bean Validation) |
 | Security    | Spring Security (HTTP Basic, BCrypt password hashing) |
-| Database    | H2 (file-based), Hibernate ORM |
+| Database    | H2 (file-based, local) · PostgreSQL (production) · Hibernate ORM |
 | Frontend    | HTML5, CSS3, vanilla JavaScript (Fetch API) |
 | Build       | Maven (Maven Wrapper included) |
+| Deployment  | Docker (`Dockerfile.vercel`) on Vercel |
 | Testing     | JUnit 5, Spring MockMvc, Spring Security Test |
 
 ---
@@ -125,6 +126,9 @@ Only **ACTIVE** reports of the **opposite type** are compared, and matches below
 traceback/
 ├── pom.xml                         Maven build file and dependencies
 ├── mvnw, mvnw.cmd                  Maven Wrapper (no Maven install needed)
+├── Dockerfile.vercel               Container build used by Vercel (and plain Docker)
+├── .dockerignore                   Files kept out of the Docker image
+├── vercel.json                     Tells Vercel to deploy the container
 ├── README.md
 ├── docs/screenshots/               Screenshots used in this README
 ├── data/                           H2 database files (created on first run, not in Git)
@@ -132,7 +136,7 @@ traceback/
     ├── main/
     │   ├── java/com/traceback/traceback/
     │   │   ├── TracebackApplication.java
-    │   │   ├── config/SecurityConfig.java
+    │   │   ├── config/             SecurityConfig, DatabaseUrlConverter
     │   │   ├── controller/         ItemReportController, ItemClaimController
     │   │   ├── dto/                ReportRequest, ClaimRequest, StatusUpdateRequest,
     │   │   │                       ReportResponse, MatchResult, ApiError
@@ -141,7 +145,8 @@ traceback/
     │   │   ├── repository/         ItemReportRepository, ItemClaimRepository
     │   │   └── service/            ReportService, ClaimService, ItemMatchingService
     │   └── resources/
-    │       ├── application.properties
+    │       ├── application.properties        local settings (H2, port 8080)
+    │       ├── application-prod.properties   production settings (PostgreSQL)
     │       └── static/             index.html, app.js, style.css,
     │                               admin.html, admin.js, admin.css
     └── test/
@@ -151,6 +156,7 @@ traceback/
         │   ├── ClaimApiTests.java
         │   ├── PageSecurityTests.java
         │   ├── TracebackApplicationTests.java
+        │   ├── config/DatabaseUrlConverterTests.java
         │   └── dto/ReportResponseMaskingTests.java
         └── resources/application-test.properties
 ```
@@ -291,9 +297,31 @@ remembered until the browser closes).
 
 ---
 
+## Running the Tests
+
+```bat
+mvnw.cmd clean test
+```
+
+The test suite (42 test cases) uses its own in-memory database and a test-only admin
+login, so it never touches your real `data` folder. It covers:
+
+- creating reports, validation errors (400) and blocked fields such as `id`/`status`
+- masking of contact details for the public and full details for the admin
+- smart matching (opposite type only, RETURNED items ignored)
+- claims: submit (201), duplicate (409), claim on LOST item (400), unknown report (404)
+- admin-only actions without login (401) and with a wrong password (401)
+- approving a claim marks the item RETURNED and rejects other pending claims
+- reviewing the same claim twice (409)
+- admin page and H2 console blocked without login
+- converting a hosting provider's `DATABASE_URL` into PostgreSQL JDBC settings
+
+---
+
 ## Screenshots
 
-> Screenshots show sample test data only.
+> Screenshots show sample test data only. To update them, save new images with the
+> same file names in `docs/screenshots/`.
 
 | Home page (desktop) | Admin dashboard (desktop) |
 |---|---|
@@ -305,6 +333,54 @@ remembered until the browser closes).
 
 ---
 
+## Deploying to Vercel
+
+Vercel does not recognise a Maven/Spring Boot project on its own; without a
+container file it publishes an empty static site, which shows **404** even though the
+deployment says *Ready*. This repository therefore contains:
+
+- **`Dockerfile.vercel`**: builds the Spring Boot JAR with Maven and runs it on a
+  Java 17 runtime image as a non-root user, with the `prod` profile switched on.
+  Vercel gives this file priority over its own framework detection.
+- **`vercel.json`**: sets `"framework": "container"` as an extra safeguard.
+
+The whole app (website, admin page, CSS, JavaScript and API) is served by Spring Boot
+from that one container, so `/` returns `index.html` exactly as it does locally.
+
+### Environment variables (Vercel → Project → Settings → Environment Variables)
+
+| Variable | Required | Example / notes |
+|----------|----------|-----------------|
+| `PORT` | **Yes** | `8080` — Vercel sends traffic to port 80 unless `PORT` is set; the container listens on 8080. |
+| `TRACEBACK_ADMIN_PASSWORD` | **Yes** | A long, strong password. The app refuses to start in production without it. |
+| `TRACEBACK_ADMIN_USERNAME` | No | Defaults to `admin`. |
+| `DATABASE_URL` | **Yes**\* | `postgres://user:password@host/dbname?sslmode=require` (as given by Neon, Vercel Postgres or Supabase). |
+| `TRACEBACK_DB_URL`, `TRACEBACK_DB_USERNAME`, `TRACEBACK_DB_PASSWORD` | \* | Alternative to `DATABASE_URL`: `jdbc:postgresql://host:5432/dbname?sslmode=require` plus username and password. |
+| `TRACEBACK_DB_POOL_SIZE` | No | Database connections per instance, default `3`. |
+
+\* Set **either** `DATABASE_URL` **or** the three `TRACEBACK_DB_*` variables. If no database
+is configured, the app stops at startup with a clear error instead of using H2.
+
+`SPRING_PROFILES_ACTIVE=prod` is already set inside `Dockerfile.vercel`.
+
+### Things to know about this hosting model
+
+- **Container runtime is in beta on Vercel.** Behaviour and limits may change.
+- **Scale to zero:** when nobody visits for a while, Vercel stops the container. The next
+  visitor waits while Spring Boot starts again (typically several seconds).
+- **No local files survive:** that is why production uses PostgreSQL, never the H2 file.
+- **Tables are created automatically** on the first start (`ddl-auto=update`).
+- The **H2 console is disabled** in production.
+
+### Run the production image locally (optional)
+
+```bat
+docker build -f Dockerfile.vercel -t traceback .
+docker run -p 8080:8080 -e PORT=8080 -e TRACEBACK_ADMIN_PASSWORD=ChangeMe123 -e DATABASE_URL=postgres://user:password@host.docker.internal:5432/traceback traceback
+```
+
+---
+
 ## Future Enhancements
 
 - User accounts and login for reporters and claimants, so people can track their own reports and claims.
@@ -312,10 +388,10 @@ remembered until the browser closes).
 - Image upload for items, and image-based matching.
 - Admin login page with sessions and logout, multiple admin accounts and roles.
 - Rate limiting and CAPTCHA on public forms to stop spam.
-- Migration to MySQL or PostgreSQL with Flyway database migrations for production.
+- Flyway database migrations instead of `ddl-auto=update` in production.
 - Pagination for large numbers of reports and claims.
 - QR-code tags for belongings that link directly to a TraceBack report.
-- Deployment with Docker and HTTPS.
+- Health-check endpoint (Spring Boot Actuator) and monitoring.
 
 ---
 

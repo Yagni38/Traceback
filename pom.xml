@@ -50,6 +50,13 @@
     <scope>runtime</scope>
 </dependency>
 
+<!-- PostgreSQL driver for production (version managed by Spring Boot) -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+
 <!-- Spring Boot 4 moved the H2 web console into its own module;
      without this, /h2-console returns 404 -->
 <dependency>

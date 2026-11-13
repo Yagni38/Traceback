@@ -1,0 +1,16 @@
+# Keep the Docker build small and never copy local data or secrets into the image
+target/
+data/
+backups/
+logs/
+docs/
+.git/
+.idea/
+.vscode/
+*.mv.db
+*.trace.db
+*.log
+.env
+*.env
+src/main/resources/application-local.properties
+HELP.md

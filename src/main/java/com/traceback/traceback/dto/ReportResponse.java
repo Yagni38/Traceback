@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * What the API sends back for a report.
- * The public sees masked contact details (e.g. "r***@gmail.com");
+ * The public sees masked contact details (e.g. "r***@example.com");
  * only a logged-in admin sees the full name, email and phone.
  */
 public record ReportResponse(
@@ -55,7 +55,7 @@ public record ReportResponse(
                 : parts[0] + " " + parts[parts.length - 1].charAt(0) + ".";
     }
 
-    /** "ravi.kumar@gmail.com" -> "r***@gmail.com" */
+    /** "ravi.kumar@example.com" -> "r***@example.com" */
     static String maskEmail(String email) {
         if (email == null || email.isBlank()) return null;
         int at = email.indexOf('@');

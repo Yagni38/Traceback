@@ -86,9 +86,17 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(
             @Value("${traceback.admin.username:admin}") String username,
             @Value("${traceback.admin.password:}") String password,
+            @Value("${traceback.admin.require-password:false}") boolean requirePassword,
             PasswordEncoder encoder) {
 
         String finalPassword = password;
+
+        // In production several app instances may run at once; a random password
+        // per instance would make admin login fail at random, so refuse to start.
+        if ((finalPassword == null || finalPassword.isBlank()) && requirePassword) {
+            throw new IllegalStateException(
+                    "TRACEBACK_ADMIN_PASSWORD environment variable must be set in production");
+        }
 
         if (finalPassword == null || finalPassword.isBlank()) {
             finalPassword = generatePassword();
